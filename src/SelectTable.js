@@ -47,6 +47,7 @@ const options = [
     { value: "Gyrocopter", label: "Gyrocopter" },
     { value: "Hoodwink", label: "Hoodwink" },
     { value: "Juggernaut", label: "Juggernaut" },
+    { value: "Kez", label: "Kez" },
     { value: "Luna", label: "Luna" },
     { value: "Medusa", label: "Medusa" },
     { value: "Meepo", label: "Meepo" },
