@@ -344,6 +344,11 @@ const allColumns = {
         selector: row => row["Juggernaut"],
         sortable: true,
     },
+    "Kez": {
+        name: "Kez",
+        selector: row => row["Kez"],
+        sortable: true,
+    },
     "Luna": {
         name: "Luna",
         selector: row => row["Luna"],
