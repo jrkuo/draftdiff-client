@@ -64154,6 +64154,14 @@ function SelectTable({ onComfortSelect, ownComfortHeroes, oppositeComfortHeroes,
                     className="basic-multi-select"
                     classNamePrefix="select"
                     placeholder="Select Comfort Heroes..."
+                    filterOption={(candidate, input) => {
+                        if (!input) return true;
+                        const searchInput = input.toLowerCase();
+                        const label = candidate.label.toLowerCase();
+                        const words = label.split(' ');
+                        const initials = words.length > 1 ? words.map(word => word[0]).join('').toLowerCase() : ''; 
+                        return label.includes(searchInput) || (initials && initials === searchInput);
+                    }}
                 />
             </div>
             <div>
@@ -64166,6 +64174,14 @@ function SelectTable({ onComfortSelect, ownComfortHeroes, oppositeComfortHeroes,
                     className="basic-multi-select"
                     classNamePrefix="select" 
                     placeholder="Select Picked Heroes..."
+                    filterOption={(candidate, input) => {
+                        if (!input) return true;
+                        const searchInput = input.toLowerCase();
+                        const label = candidate.label.toLowerCase();
+                        const words = label.split(' ');
+                        const initials = words.length > 1 ? words.map(word => word[0]).join('').toLowerCase() : '';
+                        return label.includes(searchInput) || (initials && initials === searchInput);
+                    }}
                 />
             </div>
             <div>
