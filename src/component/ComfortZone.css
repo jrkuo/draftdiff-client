@@ -1,0 +1,60 @@
+/* src/component/ComfortZone.css */
+.comfort-zone-container {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;   /* Enable horizontal scrolling */
+  overflow-y: hidden;  /* Hide vertical scrollbar */
+  white-space: nowrap; /* Keep items in a single line for horizontal scroll */
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  min-height: 70px;
+  max-height: 70px; /* Fix height to prevent vertical expansion */
+  width: 100%;     /* Make it take full width of its parent */
+  max-width: 100%; /* Removed fixed max-width */
+  align-items: center;
+  box-sizing: border-box;
+
+  /* Hide scrollbar */
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none;  /* For Internet Explorer and Edge (older versions) */
+}
+
+/* For Webkit browsers (Chrome, Safari, newer Edge) */
+.comfort-zone-container::-webkit-scrollbar {
+  display: none; /* Effectively hides the scrollbar */
+  width: 0;
+  height: 0;
+}
+
+/* 
+  Keep the following styles for drag-over and empty-zone 
+  as they are independent of scrollbar visibility and width properties.
+*/
+
+.comfort-zone-container.drag-over {
+  border-color: #007bff;
+  background-color: #e9ecef;
+}
+
+.comfort-zone-container.empty-zone {
+  justify-content: center;
+  border-style: dashed;
+}
+
+.empty-zone-placeholder {
+  color: #6c757d;
+  font-size: 0.9em;
+  text-align: center;
+  padding: 10px;
+  user-select: none;
+  white-space: normal;
+}
+
+/* Ensure HeroCells inside the comfort zone are displayed inline-block or inline-flex to respect nowrap */
+.comfort-zone-container .hero-cell-small {
+  flex-shrink: 0; /* Prevent hero cells from shrinking */
+  /* HeroCell itself is already display: inline-flex */
+} 

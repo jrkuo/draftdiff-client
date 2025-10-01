@@ -1,0 +1,64 @@
+/* src/component/TeamCell.css */
+.team-cell-container {
+  display: flex;
+  flex-direction: row; /* Explicitly set direction, though it's the default for flex */
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid #b0bec5;
+  border-radius: 6px;
+  background-color: #78909C;
+  min-height: 62px; /* Accommodate slot height, padding, border */
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  width: fit-content; /* Ensure container only takes up space needed for its items */
+  margin-left: auto;  /* Example: to center the block if it's narrower than parent */
+  margin-right: auto; /* Example: to center the block */
+}
+
+.team-slot {
+  width: 96px;   /* Matches hero-cell-small width */
+  height: 54px;  /* Matches hero-cell-small height */
+  display: flex; /* For centering content (placeholder or HeroCell) within the slot */
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #90a4ae;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  flex-shrink: 0; /* Prevent slots from shrinking */
+}
+
+.team-slot.empty {
+  background-color: #f5f5f5;
+}
+
+.team-slot.empty.drag-over {
+  background-color: #e0e0e0;
+  border-color: #007bff;
+}
+
+.team-slot.filled {
+  border-style: solid;
+  border-color: transparent;
+  padding: 0;
+  /* HeroCell component will fill this slot */
+}
+
+.empty-slot-placeholder {
+  color: #78909c;
+  font-size: 12px; /* Slightly smaller for better fit if text wraps */
+  font-weight: 500;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.3;
+  user-select: none;
+  padding: 4px; /* Add some padding inside the placeholder text area */
+  box-sizing: border-box;
+  white-space: normal; /* Allow text to wrap nicely */
+} 

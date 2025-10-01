@@ -1,0 +1,26 @@
+/* src/SelectTable.css */
+
+/*
+  Styles for HeroCell components when rendered within a react-data-table-component cell.
+  .rdt_TableCell is the class applied by react-data-table-component to its table cells.
+*/
+.rdt_TableCell .hero-cell-small {
+  width: 72px !important;   /* Override default .hero-cell-small width */
+  height: 40px !important;  /* Override default .hero-cell-small height */
+  margin: auto !important;  /* Center the cell if the table cell is larger */
+  flex-shrink: 0;         /* Prevent shrinking in flex context of table cell */
+}
+
+/* Ensure the image inside the resized hero-cell-small scales correctly */
+.rdt_TableCell .hero-cell-small img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* 
+  The .rdt_TableCell itself is a flex container. 
+  Default alignment might be sufficient, but if further centering of the HeroCell
+  within the rdt_TableCell is needed, you might need to adjust rdt_TableCell styles or wrapper styles.
+  The `margin: auto` on .hero-cell-small should help with centering it within the .rdt_TableCell.
+*/ 

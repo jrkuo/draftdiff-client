@@ -1,0 +1,134 @@
+/* src/component/heroCell.css */
+.hero-cell {
+  display: inline-flex; /* Use flex for alignment */
+  align-items: center;
+  justify-content: center;
+  padding: 2px; /* Space for the border */
+  border: 2px solid transparent; /* Initial transparent border for smooth hover effect */
+  cursor: grab; /* Indicate draggable item */
+  transition: border-color 0.2s ease-in-out;
+  width: calc(50% - 4px);  /* Two per row, accounting for gap */
+  aspect-ratio: 16 / 9;
+  box-sizing: border-box; /* Border and padding included in width/height */
+  background-color: #f0f0f0; /* Light background for the cell itself */
+  border-radius: 4px; /* Slightly rounded corners */
+  position: relative; /* Added for potential absolute children, though remove is in small variant */
+}
+
+.hero-cell:hover {
+  border-color: #007bff; /* Highlight color on hover (e.g., blue) */
+}
+
+.hero-cell:active { /* Style when the item is being dragged */
+  cursor: grabbing;
+  border-color: #0056b3; /* Darker blue when active/grabbing */
+}
+
+.hero-cell img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* ✅ Show full image without cropping */
+  user-select: none;
+  border-radius: 2px;
+}
+
+
+.hero-cell-error {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px; /* Default error size, can be overridden if needed */
+  height: 54px;
+  border: 1px dashed #ccc;
+  color: #888;
+  font-size: 24px;
+  font-weight: bold;
+  box-sizing: border-box;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  cursor: not-allowed;
+} 
+
+.hero-cell-small {
+  width: auto;          /* Adapt to container (column) width */
+  height: 54px;
+  padding: 2px; /* T, R, B, L padding - No left padding */
+  border: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start; /* Align content (image) to the left */
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  cursor: grab;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease-in-out;
+  position: relative; /* Crucial for positioning the remove button */
+}
+
+.hero-cell-small:hover {
+  border-color: #007bff;
+}
+
+.hero-cell-small:active {
+  cursor: grabbing;
+  border-color: #0056b3;
+}
+
+.hero-cell-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Ensures the whole image is visible */
+  border-radius: 2px;
+  user-select: none;
+}
+
+/* Styles for the remove button, specific to hero-cell-small context */
+.hero-cell-small .remove-hero-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: rgba(200, 0, 0, 0.8);
+  color: white;
+  border: 1px solid white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 14px;
+  line-height: 20px; /* Helps center the '×' character */
+  text-align: center;
+  cursor: pointer;
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  z-index: 10; /* Ensure it's on top of the image */
+  padding: 0; /* Remove default button padding */
+  font-weight: bold;
+}
+
+.hero-cell-small:hover .remove-hero-button {
+  opacity: 1; /* Show on hover of the HeroCell */
+}
+
+.hero-cell-small .remove-hero-button:hover {
+  background-color: rgba(255, 0, 0, 1); /* Darker red on hover */
+}
+
+/* Error state for the small hero cell */
+.hero-cell-small-error {
+  width: 96px;
+  height: 54px;
+  /* Inherit other error styles from .hero-cell-error or define explicitly */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #ccc;
+  color: #888;
+  font-size: 20px; /* Adjusted for smaller cell */
+  font-weight: bold;
+  box-sizing: border-box;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  cursor: not-allowed;
+}
