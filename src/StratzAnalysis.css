@@ -1,0 +1,248 @@
+/* src/StratzAnalysis.css */
+
+.stratz-analysis {
+    padding: 20px;
+    background-color: #263238;
+    min-height: 100%;
+    color: #eceff1;
+}
+
+.stratz-analysis.loading,
+.stratz-analysis.error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.loading-spinner {
+    font-size: 18px;
+    color: #90a4ae;
+}
+
+.error-message {
+    text-align: center;
+    color: #ef5350;
+}
+
+.error-message h2 {
+    margin-bottom: 12px;
+}
+
+.error-message p {
+    color: #90a4ae;
+    margin: 8px 0;
+}
+
+/* Header */
+.analysis-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.analysis-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #eceff1;
+    margin: 0;
+}
+
+/* Content Layout */
+.analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Metrics Header */
+.metrics-header {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    margin-bottom: 8px;
+}
+
+.team-header-spacer {
+    width: 180px; /* Match PositionTeamCell width */
+    flex-shrink: 0;
+}
+
+.metrics-labels {
+    display: flex;
+    gap: 8px;
+    padding-left: 20px;
+}
+
+.metric-label {
+    width: 50px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #78909c;
+    text-transform: uppercase;
+    cursor: help;
+}
+
+.metric-label.total {
+    width: 60px;
+    color: #b0bec5;
+}
+
+/* Teams Container */
+.teams-container {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+/* Team Section */
+.team-section {
+    flex: 1;
+    min-width: 350px;
+    background-color: #37474f;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.team-section.ally {
+    border-left: 4px solid #4caf50;
+}
+
+.team-section.enemy {
+    border-left: 4px solid #f44336;
+}
+
+.team-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #455a64;
+}
+
+.team-section.ally .team-title {
+    color: #81c784;
+}
+
+.team-section.enemy .team-title {
+    color: #e57373;
+}
+
+/* Team Content */
+.team-content {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+/* Team Metrics */
+.team-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.position-metrics {
+    height: 66px; /* Match position slot height */
+    display: flex;
+    align-items: center;
+}
+
+/* Metrics Row */
+.metrics-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #455a64;
+    border-radius: 6px;
+    min-width: 200px;
+}
+
+.metrics-row.empty {
+    opacity: 0.5;
+}
+
+.metrics-row.total-row {
+    background-color: #546e7a;
+    font-weight: 600;
+    border-top: 2px solid #607d8b;
+    margin-top: 8px;
+}
+
+.metric-value {
+    width: 50px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.metric-value.total {
+    width: 60px;
+    font-weight: 700;
+    border-left: 1px solid #607d8b;
+    padding-left: 8px;
+}
+
+/* Value Colors */
+.metric-value.positive {
+    color: #81c784;
+}
+
+.metric-value.negative {
+    color: #e57373;
+}
+
+.metric-value.neutral {
+    color: #90a4ae;
+}
+
+/* Team Total Row */
+.team-total-row {
+    padding-top: 8px;
+    border-top: 2px dashed #546e7a;
+    margin-top: 8px;
+}
+
+.team-total-row .metrics-row {
+    background-color: #263238;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .teams-container {
+        flex-direction: column;
+    }
+
+    .team-section {
+        min-width: 100%;
+    }
+
+    .team-content {
+        flex-direction: column;
+    }
+
+    .team-metrics {
+        width: 100%;
+    }
+}
+
+/* Animation for value changes */
+.metric-value {
+    transition: color 0.2s ease;
+}
+
+/* Hover effects */
+.metrics-row:hover {
+    background-color: #546e7a;
+}
+
+.metrics-row.total-row:hover {
+    background-color: #607d8b;
+}

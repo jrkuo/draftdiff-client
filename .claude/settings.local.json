@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)"
+    ],
+    "deny": [
+      "Bash(curl:*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(*.env.*)",
+      "Read(./credentials.json)",
+      "Read(*credentials.json*)",
+      "Read(./build)"
+    ],
+    "ask": []
+  }
+}

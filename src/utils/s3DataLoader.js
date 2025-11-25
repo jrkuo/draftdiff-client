@@ -10,8 +10,11 @@ import pako from 'pako';
  */
 export async function loadGzippedData(config) {
   try {
-    const fullUrl = `${config.bucketUrl}/${config.filename}`;
-    
+    // Add daily cache-busting parameter (same for whole day, updates at midnight)
+    // This allows browser caching within the day, but forces refresh daily
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const fullUrl = `${config.bucketUrl}/${config.filename}?v=${today}`;
+
     const response = await fetch(fullUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`);

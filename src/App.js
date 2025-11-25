@@ -1,18 +1,35 @@
 import './App.css';
 import { BrowserRouter as Router } from 'react-router-dom';
 import DualSelectTable from './SelectTable';
+import StratzAnalysis from './StratzAnalysis';
 import HeroCell from './component/heroCell';
 import { useState } from 'react';
 import { HERO_OPTIONS } from './constants/heroes';
 
 const HERO_NAMES = HERO_OPTIONS.map(option => option.value);
 
+const MODES = ['diff', 'diff2', 'game'];
+const MODE_LABELS = {
+  diff: 'Draft Diff',
+  diff2: 'Draft Diff 2',
+  game: 'Draft Game'
+};
+const MODE_COLORS = {
+  diff: '#007bff',   // Blue
+  diff2: '#9c27b0',  // Purple
+  game: '#28a745'    // Green
+};
+
 function App() {
   const [filter, setFilter] = useState('');
-  const [currentMode, setCurrentMode] = useState('diff'); // 'diff' or 'game'
+  const [currentMode, setCurrentMode] = useState('diff'); // 'diff', 'diff2', or 'game'
 
-  const toggleMode = () => {
-    setCurrentMode(prevMode => prevMode === 'diff' ? 'game' : 'diff');
+  const cycleMode = () => {
+    setCurrentMode(prevMode => {
+      const currentIndex = MODES.indexOf(prevMode);
+      const nextIndex = (currentIndex + 1) % MODES.length;
+      return MODES[nextIndex];
+    });
   };
 
   const filteredHeroes = HERO_NAMES.filter(name =>
@@ -26,21 +43,21 @@ function App() {
         <div className="Sidebar">
           <div className="ModeToggleContainer" style={{ marginBottom: '10px', padding: '5px' }}>
             <button
-              onClick={toggleMode}
+              onClick={cycleMode}
               style={{
                 width: '100%',
                 padding: '12px',
                 fontSize: '18px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                backgroundColor: currentMode === 'diff' ? '#007bff' : '#28a745', // Blue for Diff, Green for Game
+                backgroundColor: MODE_COLORS[currentMode],
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
                 transition: 'background-color 0.3s ease'
               }}
             >
-              {currentMode === 'diff' ? 'Draft Diff' : 'Draft Game'}
+              {MODE_LABELS[currentMode]}
             </button>
           </div>
           <input
@@ -58,11 +75,15 @@ function App() {
         </div>
 
         <div className="MainContent">
-          {currentMode === 'diff' ? (
+          {currentMode === 'diff' && (
             <div className="DualSelectScrollable">
               <DualSelectTable />
             </div>
-          ) : (
+          )}
+          {currentMode === 'diff2' && (
+            <StratzAnalysis />
+          )}
+          {currentMode === 'game' && (
             <div style={{ padding: '20px', textAlign: 'center', color: '#333' }}>
               <h1>Draft Game Mode</h1>
               <p style={{ fontSize: '18px' }}>Content for Draft Game mode will be implemented here.</p>
