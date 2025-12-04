@@ -43,6 +43,21 @@ export const STRATZ_DATA_CONFIG = {
 // Default bracket selection
 export const DEFAULT_BRACKET = 'Archon';
 
+// Pick rate threshold options (in percentages)
+export const PICK_RATE_THRESHOLDS = [
+    { value: 0, label: '0%' },
+    { value: 0.5, label: '0.5%' },
+    { value: 1, label: '1%' },
+    { value: 2, label: '2%' },
+    { value: 3, label: '3%' },
+    { value: 5, label: '5%' },
+    { value: 10, label: '10%' }
+];
+
+// Default pick rate thresholds
+export const DEFAULT_HERO_PICK_RATE = 0;
+export const DEFAULT_POSITION_PICK_RATE = 0;
+
 /**
  * Get the bracket group for synergy/counter lookups
  * @param {string} bracket - Individual bracket name

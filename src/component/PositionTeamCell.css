@@ -1,35 +1,36 @@
 /* src/component/PositionTeamCell.css */
 .position-team-cell-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 8px;
     padding: 12px;
     border: 1px solid #546e7a;
     border-radius: 8px;
     background-color: #37474f;
-    min-width: 140px;
 }
 
-.position-slot {
+.position-column {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     padding: 6px 8px;
     border-radius: 6px;
     background-color: #455a64;
     transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex: 1;
+    min-width: 100px;
 }
 
-.position-slot.empty {
+.position-column.empty {
     border: 2px dashed #78909c;
 }
 
-.position-slot.filled {
+.position-column.filled {
     border: 2px solid #607d8b;
 }
 
-.position-slot.drag-over {
+.position-column.drag-over {
     background-color: #546e7a;
     border-color: #42a5f5;
 }
@@ -44,11 +45,10 @@
 }
 
 .position-hero-area {
-    flex: 1;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    min-height: 54px;
+    justify-content: center;
+    width: 100%;
 }
 
 .empty-position-placeholder {

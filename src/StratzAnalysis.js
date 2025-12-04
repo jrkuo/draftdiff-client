@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import BracketSelector from './component/BracketSelector';
+import PickRateFilter from './component/PickRateFilter';
 import PositionTeamCell from './component/PositionTeamCell';
-import { useStratzData, getWinRateDifferential, getSynergy, getCounter } from './hooks/useStratzData';
-import { POSITIONS, DEFAULT_BRACKET, getBracketGroup } from './types/stratzTypes';
+import { useStratzData, getWinRateDifferential, getSynergy, getCounter, getHeroPickRate, getPositionPickRate } from './hooks/useStratzData';
+import { POSITIONS, DEFAULT_BRACKET, getBracketGroup, DEFAULT_HERO_PICK_RATE, DEFAULT_POSITION_PICK_RATE } from './types/stratzTypes';
 import { HERO_OPTIONS } from './constants/heroes';
 import './StratzAnalysis.css';
 
@@ -19,6 +20,12 @@ const StratzAnalysis = () => {
     const [bracket, setBracket] = useState(searchParams.get('bracket') || DEFAULT_BRACKET);
     const [allyPicks, setAllyPicks] = useState([]);
     const [enemyPicks, setEnemyPicks] = useState([]);
+    const [heroPickRateThreshold, setHeroPickRateThreshold] = useState(
+        parseFloat(searchParams.get('heroPickRate')) || DEFAULT_HERO_PICK_RATE
+    );
+    const [positionPickRateThreshold, setPositionPickRateThreshold] = useState(
+        parseFloat(searchParams.get('positionPickRate')) || DEFAULT_POSITION_PICK_RATE
+    );
 
     // Initialize picks from URL params (runs once on mount)
     useEffect(() => {
@@ -44,7 +51,7 @@ const StratzAnalysis = () => {
     }, []);
 
     // Update URL when state changes
-    const updateURLParams = useCallback((newBracket, newAllyPicks, newEnemyPicks) => {
+    const updateURLParams = useCallback((newBracket, newAllyPicks, newEnemyPicks, newHeroPickRate, newPositionPickRate) => {
         const params = new URLSearchParams();
 
         if (newBracket && newBracket !== DEFAULT_BRACKET) {
@@ -67,27 +74,55 @@ const StratzAnalysis = () => {
             if (enemyStr) params.set('enemyPicks', enemyStr);
         }
 
+        if (newHeroPickRate !== undefined && newHeroPickRate !== DEFAULT_HERO_PICK_RATE) {
+            params.set('heroPickRate', newHeroPickRate.toString());
+        }
+
+        if (newPositionPickRate !== undefined && newPositionPickRate !== DEFAULT_POSITION_PICK_RATE) {
+            params.set('positionPickRate', newPositionPickRate.toString());
+        }
+
         setSearchParams(params);
     }, [setSearchParams]);
 
     // Handlers
     const handleBracketChange = (newBracket) => {
         setBracket(newBracket);
-        updateURLParams(newBracket, allyPicks, enemyPicks);
+        updateURLParams(newBracket, allyPicks, enemyPicks, heroPickRateThreshold, positionPickRateThreshold);
     };
 
     const handleAllyPicksChange = (picks) => {
         setAllyPicks(picks);
-        updateURLParams(bracket, picks, enemyPicks);
+        updateURLParams(bracket, picks, enemyPicks, heroPickRateThreshold, positionPickRateThreshold);
     };
 
     const handleEnemyPicksChange = (picks) => {
         setEnemyPicks(picks);
-        updateURLParams(bracket, allyPicks, picks);
+        updateURLParams(bracket, allyPicks, picks, heroPickRateThreshold, positionPickRateThreshold);
+    };
+
+    const handleHeroPickRateChange = (newRate) => {
+        setHeroPickRateThreshold(newRate);
+        updateURLParams(bracket, allyPicks, enemyPicks, newRate, positionPickRateThreshold);
+    };
+
+    const handlePositionPickRateChange = (newRate) => {
+        setPositionPickRateThreshold(newRate);
+        updateURLParams(bracket, allyPicks, enemyPicks, heroPickRateThreshold, newRate);
     };
 
     // Get bracket group for synergy/counter lookups
     const bracketGroup = useMemo(() => getBracketGroup(bracket), [bracket]);
+
+    // Get available heroes (not picked by either team)
+    const availableHeroes = useMemo(() => {
+        const pickedHeroNames = [
+            ...allyPicks.map(p => p.heroName),
+            ...enemyPicks.map(p => p.heroName)
+        ].filter(Boolean);
+
+        return HERO_OPTIONS.filter(hero => !pickedHeroNames.includes(hero.value));
+    }, [allyPicks, enemyPicks]);
 
     // Calculate metrics for a single hero
     const calculateHeroMetrics = useCallback((heroName, position, isAlly) => {
@@ -167,38 +202,214 @@ const StratzAnalysis = () => {
         return 'neutral';
     };
 
-    // Render metrics row for a position
-    const renderPositionMetrics = (position, picks, isAlly) => {
-        const pick = picks.find(p => p.position === position);
-        const heroName = pick?.heroName;
+    // Get hero recommendations for a specific position
+    const getHeroRecommendations = useMemo(() => {
+        const recommendations = {};
 
-        if (!heroName) {
+        POSITIONS.forEach(pos => {
+            // Get the hero currently in this position (if any)
+            const allyCurrentHero = allyPicks.find(p => p.position === pos.id)?.heroName;
+            const enemyCurrentHero = enemyPicks.find(p => p.position === pos.id)?.heroName;
+
+            // Calculate for ally team - exclude current hero from synergy
+            const allyRecs = availableHeroes
+                .filter(hero => {
+                    // Filter by pick rate thresholds
+                    if (!data) return false;
+                    const heroPickRate = getHeroPickRate(data, bracket, pos.id, hero.value);
+                    const positionPickRate = getPositionPickRate(data, bracket, pos.id, hero.value);
+
+                    // Debug logging for first position and first hero
+                    if (pos.id === 1 && hero.value === availableHeroes[0]?.value) {
+                        console.log(`Position ${pos.id}, Hero: ${hero.value}`);
+                        console.log(`  Hero Pick Rate: ${heroPickRate}, Position Pick Rate: ${positionPickRate}`);
+                        console.log(`  Thresholds: heroPickRate >= ${heroPickRateThreshold} && positionPickRate >= ${positionPickRateThreshold}`);
+                        console.log(`  Pass: ${heroPickRate >= heroPickRateThreshold && positionPickRate >= positionPickRateThreshold}`);
+                    }
+
+                    return heroPickRate >= heroPickRateThreshold && positionPickRate >= positionPickRateThreshold;
+                })
+                .map(hero => {
+                    if (!data || !hero.value) {
+                        return { heroName: hero.value, total: 0, image: hero.image };
+                    }
+
+                    // Win rate differential from 50%
+                    const winRate = getWinRateDifferential(data, bracket, pos.id, hero.value);
+
+                    // Synergy with teammates (excluding the hero currently in this position)
+                    let synergy = 0;
+                    allyPicks.forEach(teammate => {
+                        if (teammate.heroName &&
+                            teammate.heroName !== hero.value &&
+                            teammate.heroName !== allyCurrentHero) {
+                            synergy += getSynergy(data, bracketGroup, hero.value, teammate.heroName);
+                        }
+                    });
+
+                    // Counter against enemies
+                    let counter = 0;
+                    enemyPicks.forEach(enemy => {
+                        if (enemy.heroName) {
+                            counter += getCounter(data, bracketGroup, hero.value, enemy.heroName);
+                        }
+                    });
+
+                    const total = winRate + synergy + counter;
+
+                    return {
+                        heroName: hero.value,
+                        total: total,
+                        image: hero.image
+                    };
+                })
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 10); // Top 10 heroes
+
+            // Calculate for enemy team - exclude current hero from synergy
+            const enemyRecs = availableHeroes
+                .filter(hero => {
+                    // Filter by pick rate thresholds
+                    if (!data) return false;
+                    const heroPickRate = getHeroPickRate(data, bracket, pos.id, hero.value);
+                    const positionPickRate = getPositionPickRate(data, bracket, pos.id, hero.value);
+                    return heroPickRate >= heroPickRateThreshold && positionPickRate >= positionPickRateThreshold;
+                })
+                .map(hero => {
+                    if (!data || !hero.value) {
+                        return { heroName: hero.value, total: 0, image: hero.image };
+                    }
+
+                    // Win rate differential from 50%
+                    const winRate = getWinRateDifferential(data, bracket, pos.id, hero.value);
+
+                    // Synergy with teammates (excluding the hero currently in this position)
+                    let synergy = 0;
+                    enemyPicks.forEach(teammate => {
+                        if (teammate.heroName &&
+                            teammate.heroName !== hero.value &&
+                            teammate.heroName !== enemyCurrentHero) {
+                            synergy += getSynergy(data, bracketGroup, hero.value, teammate.heroName);
+                        }
+                    });
+
+                    // Counter against enemies (ally team from enemy perspective)
+                    let counter = 0;
+                    allyPicks.forEach(enemy => {
+                        if (enemy.heroName) {
+                            counter += getCounter(data, bracketGroup, hero.value, enemy.heroName);
+                        }
+                    });
+
+                    const total = winRate + synergy + counter;
+
+                    return {
+                        heroName: hero.value,
+                        total: total,
+                        image: hero.image
+                    };
+                })
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 10); // Top 10 heroes
+
+            recommendations[pos.id] = {
+                ally: allyRecs,
+                enemy: enemyRecs
+            };
+        });
+
+        return recommendations;
+    }, [availableHeroes, data, bracket, bracketGroup, allyPicks, enemyPicks, heroPickRateThreshold, positionPickRateThreshold]);
+
+    // Render hero recommendations for a position
+    const renderPositionRecommendations = (position, isAlly) => {
+        const recs = getHeroRecommendations[position]?.[isAlly ? 'ally' : 'enemy'] || [];
+
+        if (recs.length === 0) {
             return (
-                <div className="metrics-row empty">
-                    <span className="metric-value">-</span>
-                    <span className="metric-value">-</span>
-                    <span className="metric-value">-</span>
-                    <span className="metric-value total">-</span>
+                <div key={position} className="position-recommendation-column">
+                    <div className="no-recommendations">All picked</div>
                 </div>
             );
         }
 
-        const metrics = calculateHeroMetrics(heroName, position, isAlly);
-
         return (
-            <div className="metrics-row">
-                <span className={`metric-value ${getValueClass(metrics.winRate)}`}>
-                    {formatValue(metrics.winRate)}
-                </span>
-                <span className={`metric-value ${getValueClass(metrics.synergy)}`}>
-                    {formatValue(metrics.synergy)}
-                </span>
-                <span className={`metric-value ${getValueClass(metrics.counter)}`}>
-                    {formatValue(metrics.counter)}
-                </span>
-                <span className={`metric-value total ${getValueClass(metrics.total)}`}>
-                    {formatValue(metrics.total)}
-                </span>
+            <div key={position} className="position-recommendation-column">
+                {recs.map(rec => {
+                    let imageSrc;
+                    try {
+                        const imageName = rec.image.substring(rec.image.lastIndexOf('/') + 1);
+                        imageSrc = require(`./img/heroes/${imageName}`);
+                    } catch (e) {
+                        return null;
+                    }
+
+                    return (
+                        <div
+                            key={rec.heroName}
+                            className="recommendation-item"
+                            draggable
+                            onDragStart={(e) => {
+                                const dragData = {
+                                    heroName: rec.heroName,
+                                    type: 'hero'
+                                };
+                                e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+                                e.dataTransfer.effectAllowed = 'move';
+                            }}
+                        >
+                            <img src={imageSrc} alt={rec.heroName} className="recommendation-hero-img" />
+                            <span className={`recommendation-value ${getValueClass(rec.total)}`}>
+                                {formatValue(rec.total)}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    // Render a single metric row across all positions
+    const renderMetricRow = (metricType, picks, isAlly, teamTotal) => {
+        return (
+            <div className="metric-row">
+                <div className="metric-label-cell">{metricType}</div>
+                {POSITIONS.map(pos => {
+                    const pick = picks.find(p => p.position === pos.id);
+                    const heroName = pick?.heroName;
+
+                    if (!heroName) {
+                        return <div key={pos.id} className="metric-value-cell">-</div>;
+                    }
+
+                    const metrics = calculateHeroMetrics(heroName, pos.id, isAlly);
+                    let value;
+                    switch(metricType) {
+                        case 'Win%':
+                            value = metrics.winRate;
+                            break;
+                        case 'Syn':
+                            value = metrics.synergy;
+                            break;
+                        case 'Cnt':
+                            value = metrics.counter;
+                            break;
+                        case 'Total':
+                            value = metrics.total;
+                            break;
+                        default:
+                            value = 0;
+                    }
+
+                    return (
+                        <div key={pos.id} className={`metric-value-cell ${getValueClass(value)}`}>
+                            {formatValue(value)}
+                        </div>
+                    );
+                })}
+                <div className={`metric-value-cell team-total ${getValueClass(teamTotal)}`}>
+                    {formatValue(teamTotal)}
+                </div>
             </div>
         );
     };
@@ -226,25 +437,24 @@ const StratzAnalysis = () => {
     return (
         <div className="stratz-analysis">
             <div className="analysis-header">
-                <h1>Draft Analysis</h1>
-                <BracketSelector
-                    selectedBracket={bracket}
-                    onBracketChange={handleBracketChange}
-                />
+                <div className="header-left">
+                    <h1>Draft Analysis</h1>
+                    <BracketSelector
+                        selectedBracket={bracket}
+                        onBracketChange={handleBracketChange}
+                    />
+                </div>
+                <div className="header-right">
+                    <PickRateFilter
+                        heroPickRate={heroPickRateThreshold}
+                        positionPickRate={positionPickRateThreshold}
+                        onHeroPickRateChange={handleHeroPickRateChange}
+                        onPositionPickRateChange={handlePositionPickRateChange}
+                    />
+                </div>
             </div>
 
             <div className="analysis-content">
-                {/* Column Headers */}
-                <div className="metrics-header">
-                    <div className="team-header-spacer"></div>
-                    <div className="metrics-labels">
-                        <span className="metric-label" title="Win rate differential from 50%">Win%</span>
-                        <span className="metric-label" title="Synergy with teammates">Syn</span>
-                        <span className="metric-label" title="Counter vs enemies">Cnt</span>
-                        <span className="metric-label total" title="Total score">Total</span>
-                    </div>
-                </div>
-
                 <div className="teams-container">
                     {/* Ally Team */}
                     <div className="team-section ally">
@@ -257,29 +467,14 @@ const StratzAnalysis = () => {
                                 otherTeamPicks={enemyPicks}
                                 allAvailableHeroes={HERO_OPTIONS}
                             />
+                            <div className="position-recommendations-container">
+                                {POSITIONS.map(pos => renderPositionRecommendations(pos.id, true))}
+                            </div>
                             <div className="team-metrics">
-                                {POSITIONS.map(pos => (
-                                    <div key={pos.id} className="position-metrics">
-                                        {renderPositionMetrics(pos.id, allyPicks, true)}
-                                    </div>
-                                ))}
-                                {/* Team Total */}
-                                <div className="team-total-row">
-                                    <div className="metrics-row total-row">
-                                        <span className={`metric-value ${getValueClass(teamTotals.ally.winRate)}`}>
-                                            {formatValue(teamTotals.ally.winRate)}
-                                        </span>
-                                        <span className={`metric-value ${getValueClass(teamTotals.ally.synergy)}`}>
-                                            {formatValue(teamTotals.ally.synergy)}
-                                        </span>
-                                        <span className={`metric-value ${getValueClass(teamTotals.ally.counter)}`}>
-                                            {formatValue(teamTotals.ally.counter)}
-                                        </span>
-                                        <span className={`metric-value total ${getValueClass(teamTotals.ally.total)}`}>
-                                            {formatValue(teamTotals.ally.total)}
-                                        </span>
-                                    </div>
-                                </div>
+                                {renderMetricRow('Win%', allyPicks, true, teamTotals.ally.winRate)}
+                                {renderMetricRow('Syn', allyPicks, true, teamTotals.ally.synergy)}
+                                {renderMetricRow('Cnt', allyPicks, true, teamTotals.ally.counter)}
+                                {renderMetricRow('Total', allyPicks, true, teamTotals.ally.total)}
                             </div>
                         </div>
                     </div>
@@ -295,29 +490,14 @@ const StratzAnalysis = () => {
                                 otherTeamPicks={allyPicks}
                                 allAvailableHeroes={HERO_OPTIONS}
                             />
+                            <div className="position-recommendations-container">
+                                {POSITIONS.map(pos => renderPositionRecommendations(pos.id, false))}
+                            </div>
                             <div className="team-metrics">
-                                {POSITIONS.map(pos => (
-                                    <div key={pos.id} className="position-metrics">
-                                        {renderPositionMetrics(pos.id, enemyPicks, false)}
-                                    </div>
-                                ))}
-                                {/* Team Total */}
-                                <div className="team-total-row">
-                                    <div className="metrics-row total-row">
-                                        <span className={`metric-value ${getValueClass(teamTotals.enemy.winRate)}`}>
-                                            {formatValue(teamTotals.enemy.winRate)}
-                                        </span>
-                                        <span className={`metric-value ${getValueClass(teamTotals.enemy.synergy)}`}>
-                                            {formatValue(teamTotals.enemy.synergy)}
-                                        </span>
-                                        <span className={`metric-value ${getValueClass(teamTotals.enemy.counter)}`}>
-                                            {formatValue(teamTotals.enemy.counter)}
-                                        </span>
-                                        <span className={`metric-value total ${getValueClass(teamTotals.enemy.total)}`}>
-                                            {formatValue(teamTotals.enemy.total)}
-                                        </span>
-                                    </div>
-                                </div>
+                                {renderMetricRow('Win%', enemyPicks, false, teamTotals.enemy.winRate)}
+                                {renderMetricRow('Syn', enemyPicks, false, teamTotals.enemy.synergy)}
+                                {renderMetricRow('Cnt', enemyPicks, false, teamTotals.enemy.counter)}
+                                {renderMetricRow('Total', enemyPicks, false, teamTotals.enemy.total)}
                             </div>
                         </div>
                     </div>

@@ -129,7 +129,7 @@ const PositionTeamCell = ({
             {POSITIONS.map(pos => (
                 <div
                     key={pos.id}
-                    className={`position-slot ${slots[pos.id] ? 'filled' : 'empty'}`}
+                    className={`position-column ${slots[pos.id] ? 'filled' : 'empty'}`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, pos.id)}

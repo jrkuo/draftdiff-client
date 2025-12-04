@@ -37,9 +37,23 @@
 /* Header */
 .analysis-header {
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.header-left {
+    display: flex;
     flex-direction: column;
     gap: 16px;
-    margin-bottom: 24px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    padding-top: 8px;
 }
 
 .analysis-header h1 {
@@ -54,40 +68,6 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-}
-
-/* Metrics Header */
-.metrics-header {
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    margin-bottom: 8px;
-}
-
-.team-header-spacer {
-    width: 180px; /* Match PositionTeamCell width */
-    flex-shrink: 0;
-}
-
-.metrics-labels {
-    display: flex;
-    gap: 8px;
-    padding-left: 20px;
-}
-
-.metric-label {
-    width: 50px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #78909c;
-    text-transform: uppercase;
-    cursor: help;
-}
-
-.metric-label.total {
-    width: 60px;
-    color: #b0bec5;
 }
 
 /* Teams Container */
@@ -134,84 +114,152 @@
 /* Team Content */
 .team-content {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 16px;
-    align-items: flex-start;
+}
+
+/* Position Recommendations */
+.position-recommendations-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.position-recommendation-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 6px;
+    background-color: #2c393f;
+    border-radius: 6px;
+    border: 1px solid #455a64;
+}
+
+.position-recommendation-column::-webkit-scrollbar {
+    width: 6px;
+}
+
+.position-recommendation-column::-webkit-scrollbar-track {
+    background: #37474f;
+    border-radius: 3px;
+}
+
+.position-recommendation-column::-webkit-scrollbar-thumb {
+    background: #546e7a;
+    border-radius: 3px;
+}
+
+.position-recommendation-column::-webkit-scrollbar-thumb:hover {
+    background: #607d8b;
+}
+
+.recommendation-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    background-color: #37474f;
+    border-radius: 4px;
+    cursor: grab;
+    transition: background-color 0.2s ease;
+    min-height: 24px;
+}
+
+.recommendation-item:hover {
+    background-color: #455a64;
+}
+
+.recommendation-item:active {
+    cursor: grabbing;
+}
+
+.recommendation-hero-img {
+    height: 18px;
+    width: 32px;
+    object-fit: cover;
+    border-radius: 2px;
+}
+
+.recommendation-value {
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Roboto Mono', monospace;
+    margin-left: 6px;
+}
+
+.no-recommendations {
+    text-align: center;
+    color: #78909c;
+    font-size: 11px;
+    font-style: italic;
+    padding: 8px 4px;
 }
 
 /* Team Metrics */
 .team-metrics {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    flex: 1;
+    gap: 6px;
 }
 
-.position-metrics {
-    height: 66px; /* Match position slot height */
-    display: flex;
+/* Metric Row (horizontal across all positions) */
+.metric-row {
+    display: grid;
+    grid-template-columns: 60px repeat(5, 1fr) 80px;
+    gap: 6px;
     align-items: center;
-}
-
-/* Metrics Row */
-.metrics-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 8px 12px;
+    padding: 8px;
     background-color: #455a64;
     border-radius: 6px;
-    min-width: 200px;
 }
 
-.metrics-row.empty {
-    opacity: 0.5;
-}
-
-.metrics-row.total-row {
+.metric-row:last-child {
     background-color: #546e7a;
     font-weight: 600;
     border-top: 2px solid #607d8b;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
-.metric-value {
-    width: 50px;
+/* Metric Label Cell (first column) */
+.metric-label-cell {
+    font-size: 12px;
+    font-weight: 600;
+    color: #78909c;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 4px;
+}
+
+/* Metric Value Cells */
+.metric-value-cell {
     text-align: center;
     font-size: 14px;
     font-weight: 500;
     font-family: 'Roboto Mono', monospace;
+    padding: 4px;
 }
 
-.metric-value.total {
-    width: 60px;
+.metric-value-cell.team-total {
     font-weight: 700;
-    border-left: 1px solid #607d8b;
-    padding-left: 8px;
+    border-left: 2px solid #607d8b;
+    font-size: 15px;
 }
 
 /* Value Colors */
-.metric-value.positive {
+.metric-value-cell.positive {
     color: #81c784;
 }
 
-.metric-value.negative {
+.metric-value-cell.negative {
     color: #e57373;
 }
 
-.metric-value.neutral {
+.metric-value-cell.neutral {
     color: #90a4ae;
-}
-
-/* Team Total Row */
-.team-total-row {
-    padding-top: 8px;
-    border-top: 2px dashed #546e7a;
-    margin-top: 8px;
-}
-
-.team-total-row .metrics-row {
-    background-color: #263238;
 }
 
 /* Responsive adjustments */
@@ -234,15 +282,15 @@
 }
 
 /* Animation for value changes */
-.metric-value {
+.metric-value-cell {
     transition: color 0.2s ease;
 }
 
 /* Hover effects */
-.metrics-row:hover {
+.metric-row:hover {
     background-color: #546e7a;
 }
 
-.metrics-row.total-row:hover {
+.metric-row:last-child:hover {
     background-color: #607d8b;
 }

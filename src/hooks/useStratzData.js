@@ -31,7 +31,9 @@ export function useStratzData() {
                         console.log(`Sample bracket "${firstBracket}" keys:`, Object.keys(stratzData.win_rates[firstBracket]));
                         const firstPos = Object.keys(stratzData.win_rates[firstBracket])[0];
                         if (firstPos && stratzData.win_rates[firstBracket][firstPos]?.[0]) {
-                            console.log(`Sample hero data from ${firstBracket}/${firstPos}:`, stratzData.win_rates[firstBracket][firstPos][0]);
+                            const sampleHero = stratzData.win_rates[firstBracket][firstPos][0];
+                            console.log(`Sample hero data from ${firstBracket}/${firstPos}:`, sampleHero);
+                            console.log(`Sample hero fields:`, Object.keys(sampleHero));
                         }
                     }
                 }
@@ -178,4 +180,61 @@ export function calculateTeamCounter(data, bracketGroup, allyHeroes, enemyHeroes
     }
 
     return totalCounter;
+}
+
+/**
+ * Get hero pick rate for a hero at a specific position and bracket
+ *
+ * @param {Object} data - The full stratz data object
+ * @param {string} bracket - The selected bracket (e.g., 'Archon')
+ * @param {number} position - The position number (1-5)
+ * @param {string} heroName - The hero name
+ * @returns {number} - Hero pick rate as percentage (e.g., 5.2 for 5.2%)
+ */
+export function getHeroPickRate(data, bracket, position, heroName) {
+    if (!data?.win_rates?.[bracket]?.[`pos${position}`]) {
+        return 0;
+    }
+
+    const positionData = data.win_rates[bracket][`pos${position}`];
+    const heroData = positionData.find(h => h.name === heroName);
+
+    if (!heroData || !heroData.pickRate) {
+        return 0;
+    }
+
+    // Convert from decimal (e.g., 0.052) to percentage (5.2)
+    return parseFloat(heroData.pickRate) * 100;
+}
+
+/**
+ * Get position pick rate for a hero at a specific position and bracket
+ *
+ * @param {Object} data - The full stratz data object
+ * @param {string} bracket - The selected bracket (e.g., 'Archon')
+ * @param {number} position - The position number (1-5)
+ * @param {string} heroName - The hero name
+ * @returns {number} - Position pick rate as percentage (e.g., 12.5 for 12.5%)
+ */
+export function getPositionPickRate(data, bracket, position, heroName) {
+    if (!data?.win_rates?.[bracket]?.[`pos${position}`]) {
+        return 0;
+    }
+
+    const positionData = data.win_rates[bracket][`pos${position}`];
+    const heroData = positionData.find(h => h.name === heroName);
+
+    if (!heroData || !heroData.positionPickRates) {
+        return 0;
+    }
+
+    // positionPickRates is an object with position keys (e.g., {pos1: 0.125, pos2: 0.032, ...})
+    const posPickRate = heroData.positionPickRates[`pos${position}`];
+
+    if (posPickRate === undefined || posPickRate === null) {
+        return 0;
+    }
+
+    // Convert from decimal (e.g., 0.125) to percentage (12.5)
+    return parseFloat(posPickRate) * 100;
 }

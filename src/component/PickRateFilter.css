@@ -1,0 +1,49 @@
+/* src/component/PickRateFilter.css */
+
+.pick-rate-filter-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.pick-rate-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #b0bec5;
+    white-space: nowrap;
+}
+
+.filter-select {
+    padding: 6px 12px;
+    background-color: #37474f;
+    color: #eceff1;
+    border: 1px solid #546e7a;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 70px;
+}
+
+.filter-select:hover {
+    background-color: #455a64;
+    border-color: #607d8b;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #42a5f5;
+    box-shadow: 0 0 0 2px rgba(66, 165, 245, 0.2);
+}
+
+.filter-select option {
+    background-color: #37474f;
+    color: #eceff1;
+}
