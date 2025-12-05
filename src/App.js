@@ -32,8 +32,60 @@ function App() {
     });
   };
 
+  // Helper function to get initials from hero name
+  const getHeroInitials = (heroName) => {
+    // Special cases for single-word heroes that should be treated as compound words
+    const specialCases = {
+      'Broodmother': 'bm',
+      'Dawnbreaker': 'db',
+      'Lifestealer': 'ls',
+      'Earthshaker': 'es',
+      'Clockwerk': 'cw',
+      'Windranger': 'wr',
+      'Underlord': 'ul',
+      'Bloodseeker': 'bs',
+      'Hoodwink': 'hw',
+      'Terrorblade': 'tb',
+      'Bristleback': 'bb',
+      'Beastmaster': 'bm'
+    };
+
+    // Check if hero has a special case mapping
+    if (specialCases[heroName]) {
+      return specialCases[heroName];
+    }
+
+    // Split by space, hyphen, or capital letters in the middle of words
+    const words = heroName
+      .replace(/([a-z])([A-Z])/g, '$1 $2') // Split camelCase: "AntiMage" -> "Anti Mage"
+      .split(/[\s-]+/); // Split by space or hyphen
+
+    return words
+      .map(word => word.charAt(0).toLowerCase())
+      .join('');
+  };
+
+  // Helper function to check if hero matches filter
+  const heroMatchesFilter = (heroName, filterText) => {
+    const lowerHeroName = heroName.toLowerCase();
+    const lowerFilter = filterText.toLowerCase();
+
+    // Check if name includes the filter text
+    if (lowerHeroName.includes(lowerFilter)) {
+      return true;
+    }
+
+    // Check if initials match the filter text
+    const initials = getHeroInitials(heroName);
+    if (initials.includes(lowerFilter)) {
+      return true;
+    }
+
+    return false;
+  };
+
   const filteredHeroes = HERO_NAMES.filter(name =>
-    name.toLowerCase().includes(filter.toLowerCase())
+    heroMatchesFilter(name, filter)
   );
 
   return (
