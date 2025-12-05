@@ -26,6 +26,8 @@ const StratzAnalysis = () => {
     const [positionPickRateThreshold, setPositionPickRateThreshold] = useState(
         parseFloat(searchParams.get('positionPickRate')) || DEFAULT_POSITION_PICK_RATE
     );
+    const [allyFilters, setAllyFilters] = useState({});
+    const [enemyFilters, setEnemyFilters] = useState({});
 
     // Initialize picks from URL params (runs once on mount)
     useEffect(() => {
@@ -211,121 +213,193 @@ const StratzAnalysis = () => {
             const allyCurrentHero = allyPicks.find(p => p.position === pos.id)?.heroName;
             const enemyCurrentHero = enemyPicks.find(p => p.position === pos.id)?.heroName;
 
-            // Calculate for ally team - exclude current hero from synergy
-            const allyRecs = availableHeroes
-                .filter(hero => {
-                    // Filter by pick rate thresholds
-                    if (!data) return false;
-                    const heroPickRate = getHeroPickRate(data, bracket, pos.id, hero.value);
-                    const positionPickRate = getPositionPickRate(data, bracket, pos.id, hero.value);
-
-                    // Debug logging for first position and first hero
-                    if (pos.id === 1 && hero.value === availableHeroes[0]?.value) {
-                        console.log(`Position ${pos.id}, Hero: ${hero.value}`);
-                        console.log(`  Hero Pick Rate: ${heroPickRate}, Position Pick Rate: ${positionPickRate}`);
-                        console.log(`  Thresholds: heroPickRate >= ${heroPickRateThreshold} && positionPickRate >= ${positionPickRateThreshold}`);
-                        console.log(`  Pass: ${heroPickRate >= heroPickRateThreshold && positionPickRate >= positionPickRateThreshold}`);
-                    }
-
-                    return heroPickRate >= heroPickRateThreshold && positionPickRate >= positionPickRateThreshold;
-                })
-                .map(hero => {
-                    if (!data || !hero.value) {
-                        return { heroName: hero.value, total: 0, image: hero.image };
-                    }
-
-                    // Win rate differential from 50%
-                    const winRate = getWinRateDifferential(data, bracket, pos.id, hero.value);
-
-                    // Synergy with teammates (excluding the hero currently in this position)
-                    let synergy = 0;
-                    allyPicks.forEach(teammate => {
-                        if (teammate.heroName &&
-                            teammate.heroName !== hero.value &&
-                            teammate.heroName !== allyCurrentHero) {
-                            synergy += getSynergy(data, bracketGroup, hero.value, teammate.heroName);
-                        }
-                    });
-
-                    // Counter against enemies
-                    let counter = 0;
-                    enemyPicks.forEach(enemy => {
-                        if (enemy.heroName) {
-                            counter += getCounter(data, bracketGroup, hero.value, enemy.heroName);
-                        }
-                    });
-
-                    const total = winRate + synergy + counter;
-
+            // Calculate metrics for ALL available heroes for ally team
+            const allyHeroesWithMetrics = availableHeroes.map(hero => {
+                if (!data || !hero.value) {
                     return {
                         heroName: hero.value,
-                        total: total,
-                        image: hero.image
+                        total: 0,
+                        image: hero.image,
+                        meetsThreshold: false
                     };
-                })
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 10); // Top 10 heroes
+                }
 
-            // Calculate for enemy team - exclude current hero from synergy
-            const enemyRecs = availableHeroes
-                .filter(hero => {
-                    // Filter by pick rate thresholds
-                    if (!data) return false;
-                    const heroPickRate = getHeroPickRate(data, bracket, pos.id, hero.value);
-                    const positionPickRate = getPositionPickRate(data, bracket, pos.id, hero.value);
-                    return heroPickRate >= heroPickRateThreshold && positionPickRate >= positionPickRateThreshold;
-                })
-                .map(hero => {
-                    if (!data || !hero.value) {
-                        return { heroName: hero.value, total: 0, image: hero.image };
+                // Check thresholds
+                const heroPickRate = getHeroPickRate(data, bracket, pos.id, hero.value);
+                const positionPickRate = getPositionPickRate(data, bracket, pos.id, hero.value);
+                const meetsThreshold = heroPickRate >= heroPickRateThreshold && positionPickRate >= positionPickRateThreshold;
+
+                // Win rate differential from 50%
+                const winRate = getWinRateDifferential(data, bracket, pos.id, hero.value);
+
+                // Synergy with teammates (excluding the hero currently in this position)
+                let synergy = 0;
+                allyPicks.forEach(teammate => {
+                    if (teammate.heroName &&
+                        teammate.heroName !== hero.value &&
+                        teammate.heroName !== allyCurrentHero) {
+                        synergy += getSynergy(data, bracketGroup, hero.value, teammate.heroName);
                     }
+                });
 
-                    // Win rate differential from 50%
-                    const winRate = getWinRateDifferential(data, bracket, pos.id, hero.value);
+                // Counter against enemies
+                let counter = 0;
+                enemyPicks.forEach(enemy => {
+                    if (enemy.heroName) {
+                        counter += getCounter(data, bracketGroup, hero.value, enemy.heroName);
+                    }
+                });
 
-                    // Synergy with teammates (excluding the hero currently in this position)
-                    let synergy = 0;
-                    enemyPicks.forEach(teammate => {
-                        if (teammate.heroName &&
-                            teammate.heroName !== hero.value &&
-                            teammate.heroName !== enemyCurrentHero) {
-                            synergy += getSynergy(data, bracketGroup, hero.value, teammate.heroName);
-                        }
-                    });
+                const total = winRate + synergy + counter;
 
-                    // Counter against enemies (ally team from enemy perspective)
-                    let counter = 0;
-                    allyPicks.forEach(enemy => {
-                        if (enemy.heroName) {
-                            counter += getCounter(data, bracketGroup, hero.value, enemy.heroName);
-                        }
-                    });
+                return {
+                    heroName: hero.value,
+                    total: total,
+                    image: hero.image,
+                    meetsThreshold: meetsThreshold
+                };
+            });
 
-                    const total = winRate + synergy + counter;
+            // Separate into two groups and sort each by total descending
+            const allyMeetsThreshold = allyHeroesWithMetrics
+                .filter(h => h.meetsThreshold)
+                .sort((a, b) => b.total - a.total);
 
+            const allyBelowThreshold = allyHeroesWithMetrics
+                .filter(h => !h.meetsThreshold)
+                .sort((a, b) => b.total - a.total);
+
+            // Calculate metrics for ALL available heroes for enemy team
+            const enemyHeroesWithMetrics = availableHeroes.map(hero => {
+                if (!data || !hero.value) {
                     return {
                         heroName: hero.value,
-                        total: total,
-                        image: hero.image
+                        total: 0,
+                        image: hero.image,
+                        meetsThreshold: false
                     };
-                })
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 10); // Top 10 heroes
+                }
+
+                // Check thresholds
+                const heroPickRate = getHeroPickRate(data, bracket, pos.id, hero.value);
+                const positionPickRate = getPositionPickRate(data, bracket, pos.id, hero.value);
+                const meetsThreshold = heroPickRate >= heroPickRateThreshold && positionPickRate >= positionPickRateThreshold;
+
+                // Win rate differential from 50%
+                const winRate = getWinRateDifferential(data, bracket, pos.id, hero.value);
+
+                // Synergy with teammates (excluding the hero currently in this position)
+                let synergy = 0;
+                enemyPicks.forEach(teammate => {
+                    if (teammate.heroName &&
+                        teammate.heroName !== hero.value &&
+                        teammate.heroName !== enemyCurrentHero) {
+                        synergy += getSynergy(data, bracketGroup, hero.value, teammate.heroName);
+                    }
+                });
+
+                // Counter against enemies (ally team from enemy perspective)
+                let counter = 0;
+                allyPicks.forEach(enemy => {
+                    if (enemy.heroName) {
+                        counter += getCounter(data, bracketGroup, hero.value, enemy.heroName);
+                    }
+                });
+
+                const total = winRate + synergy + counter;
+
+                return {
+                    heroName: hero.value,
+                    total: total,
+                    image: hero.image,
+                    meetsThreshold: meetsThreshold
+                };
+            });
+
+            // Separate into two groups and sort each by total descending
+            const enemyMeetsThreshold = enemyHeroesWithMetrics
+                .filter(h => h.meetsThreshold)
+                .sort((a, b) => b.total - a.total);
+
+            const enemyBelowThreshold = enemyHeroesWithMetrics
+                .filter(h => !h.meetsThreshold)
+                .sort((a, b) => b.total - a.total);
 
             recommendations[pos.id] = {
-                ally: allyRecs,
-                enemy: enemyRecs
+                ally: {
+                    meetsThreshold: allyMeetsThreshold,
+                    belowThreshold: allyBelowThreshold
+                },
+                enemy: {
+                    meetsThreshold: enemyMeetsThreshold,
+                    belowThreshold: enemyBelowThreshold
+                }
             };
         });
 
         return recommendations;
     }, [availableHeroes, data, bracket, bracketGroup, allyPicks, enemyPicks, heroPickRateThreshold, positionPickRateThreshold]);
 
+    // Helper function to get initials from hero name
+    const getHeroInitials = (heroName) => {
+        // Special cases for single-word heroes that should be treated as compound words
+        const specialCases = {
+            'Broodmother': 'bm',
+            'Dawnbreaker': 'db',
+            'Lifestealer': 'ls',
+            'Earthshaker': 'es',
+            'Clockwerk': 'cw',
+            'Windranger': 'wr',
+            'Underlord': 'ul',
+            'Bloodseeker': 'bs',
+            'Hoodwink': 'hw',
+            'Terrorblade': 'tb',
+            'Bristleback': 'bb',
+            'Beastmaster': 'bm'
+        };
+
+        // Check if hero has a special case mapping
+        if (specialCases[heroName]) {
+            return specialCases[heroName];
+        }
+
+        // Split by space, hyphen, or capital letters in the middle of words
+        const words = heroName
+            .replace(/([a-z])([A-Z])/g, '$1 $2') // Split camelCase: "AntiMage" -> "Anti Mage"
+            .split(/[\s-]+/); // Split by space or hyphen
+
+        return words
+            .map(word => word.charAt(0).toLowerCase())
+            .join('');
+    };
+
+    // Helper function to check if hero matches filter
+    const heroMatchesFilter = (heroName, filterText) => {
+        const lowerHeroName = heroName.toLowerCase();
+        const lowerFilter = filterText.toLowerCase();
+
+        // Check if name includes the filter text
+        if (lowerHeroName.includes(lowerFilter)) {
+            return true;
+        }
+
+        // Check if initials match the filter text
+        const initials = getHeroInitials(heroName);
+        if (initials.includes(lowerFilter)) {
+            return true;
+        }
+
+        return false;
+    };
+
     // Render hero recommendations for a position
     const renderPositionRecommendations = (position, isAlly) => {
-        const recs = getHeroRecommendations[position]?.[isAlly ? 'ally' : 'enemy'] || [];
+        const recData = getHeroRecommendations[position]?.[isAlly ? 'ally' : 'enemy'];
+        const filters = isAlly ? allyFilters : enemyFilters;
+        const setFilters = isAlly ? setAllyFilters : setEnemyFilters;
+        const filterText = (filters[position] || '').toLowerCase();
 
-        if (recs.length === 0) {
+        if (!recData) {
             return (
                 <div key={position} className="position-recommendation-column">
                     <div className="no-recommendations">All picked</div>
@@ -333,38 +407,79 @@ const StratzAnalysis = () => {
             );
         }
 
+        let meetsThreshold = recData.meetsThreshold || [];
+        let belowThreshold = recData.belowThreshold || [];
+
+        // Apply filter if there's text
+        if (filterText) {
+            meetsThreshold = meetsThreshold.filter(rec =>
+                heroMatchesFilter(rec.heroName, filterText)
+            );
+            belowThreshold = belowThreshold.filter(rec =>
+                heroMatchesFilter(rec.heroName, filterText)
+            );
+        }
+
+        const handleFilterChange = (e) => {
+            const newValue = e.target.value;
+            setFilters(prev => ({
+                ...prev,
+                [position]: newValue
+            }));
+        };
+
+        const renderHeroItem = (rec, isGreyedOut = false) => {
+            let imageSrc;
+            try {
+                const imageName = rec.image.substring(rec.image.lastIndexOf('/') + 1);
+                imageSrc = require(`./img/heroes/${imageName}`);
+            } catch (e) {
+                return null;
+            }
+
+            return (
+                <div
+                    key={rec.heroName}
+                    className={`recommendation-item ${isGreyedOut ? 'below-threshold' : ''}`}
+                    draggable
+                    onDragStart={(e) => {
+                        const dragData = {
+                            heroName: rec.heroName,
+                            type: 'hero'
+                        };
+                        e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+                        e.dataTransfer.effectAllowed = 'move';
+                    }}
+                >
+                    <img src={imageSrc} alt={rec.heroName} className="recommendation-hero-img" />
+                    <span className={`recommendation-value ${getValueClass(rec.total)}`}>
+                        {formatValue(rec.total)}
+                    </span>
+                </div>
+            );
+        };
+
+        const totalHeroes = meetsThreshold.length + belowThreshold.length;
+
         return (
             <div key={position} className="position-recommendation-column">
-                {recs.map(rec => {
-                    let imageSrc;
-                    try {
-                        const imageName = rec.image.substring(rec.image.lastIndexOf('/') + 1);
-                        imageSrc = require(`./img/heroes/${imageName}`);
-                    } catch (e) {
-                        return null;
-                    }
-
-                    return (
-                        <div
-                            key={rec.heroName}
-                            className="recommendation-item"
-                            draggable
-                            onDragStart={(e) => {
-                                const dragData = {
-                                    heroName: rec.heroName,
-                                    type: 'hero'
-                                };
-                                e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-                                e.dataTransfer.effectAllowed = 'move';
-                            }}
-                        >
-                            <img src={imageSrc} alt={rec.heroName} className="recommendation-hero-img" />
-                            <span className={`recommendation-value ${getValueClass(rec.total)}`}>
-                                {formatValue(rec.total)}
-                            </span>
-                        </div>
-                    );
-                })}
+                <input
+                    type="text"
+                    className="position-filter-input"
+                    placeholder="Filter..."
+                    value={filters[position] || ''}
+                    onChange={handleFilterChange}
+                />
+                {totalHeroes === 0 ? (
+                    <div className="no-recommendations">
+                        {filterText ? 'No matches' : 'All picked'}
+                    </div>
+                ) : (
+                    <>
+                        {meetsThreshold.map(rec => renderHeroItem(rec, false))}
+                        {belowThreshold.map(rec => renderHeroItem(rec, true))}
+                    </>
+                )}
             </div>
         );
     };
@@ -458,7 +573,19 @@ const StratzAnalysis = () => {
                 <div className="teams-container">
                     {/* Ally Team */}
                     <div className="team-section ally">
-                        <h2 className="team-title">Ally Team</h2>
+                        <div className="team-title-container">
+                            <h2 className="team-title">Ally Team</h2>
+                            <div className="team-total-display">
+                                {teamTotals.ally.total > teamTotals.enemy.total && (
+                                    <span className="team-differential positive">
+                                        {formatValue(teamTotals.ally.total - teamTotals.enemy.total)}
+                                    </span>
+                                )}
+                                <span className={`team-total-value ${getValueClass(teamTotals.ally.total)}`}>
+                                    {formatValue(teamTotals.ally.total)}
+                                </span>
+                            </div>
+                        </div>
                         <div className="team-content">
                             <PositionTeamCell
                                 teamId="ally"
@@ -481,7 +608,19 @@ const StratzAnalysis = () => {
 
                     {/* Enemy Team */}
                     <div className="team-section enemy">
-                        <h2 className="team-title">Enemy Team</h2>
+                        <div className="team-title-container">
+                            <h2 className="team-title">Enemy Team</h2>
+                            <div className="team-total-display">
+                                <span className={`team-total-value ${getValueClass(teamTotals.enemy.total)}`}>
+                                    {formatValue(teamTotals.enemy.total)}
+                                </span>
+                                {teamTotals.enemy.total > teamTotals.ally.total && (
+                                    <span className="team-differential positive">
+                                        {formatValue(teamTotals.enemy.total - teamTotals.ally.total)}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                         <div className="team-content">
                             <PositionTeamCell
                                 teamId="enemy"
