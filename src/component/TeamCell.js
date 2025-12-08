@@ -117,7 +117,7 @@ const TeamCell = ({
               isSmall={true}
             />
           ) : (
-            <div className="empty-slot-placeholder">Drop Hero</div>
+            <div className="empty-slot-placeholder">Select Hero</div>
           )}
         </div>
       ))}

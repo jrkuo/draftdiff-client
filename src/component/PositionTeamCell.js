@@ -144,7 +144,7 @@ const PositionTeamCell = ({
                             />
                         ) : (
                             <div className="empty-position-placeholder">
-                                Drop Hero
+                                Select Hero
                             </div>
                         )}
                     </div>

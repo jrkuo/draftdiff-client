@@ -22,7 +22,7 @@ const MODE_COLORS = {
 
 function App() {
   const [filter, setFilter] = useState('');
-  const [currentMode, setCurrentMode] = useState('diff'); // 'diff', 'diff2', or 'game'
+  const [currentMode, setCurrentMode] = useState('diff2'); // 'diff', 'diff2', or 'game'
 
   const cycleMode = () => {
     setCurrentMode(prevMode => {

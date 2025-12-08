@@ -113,6 +113,12 @@ const StratzAnalysis = () => {
         updateURLParams(bracket, allyPicks, enemyPicks, heroPickRateThreshold, newRate);
     };
 
+    const handleClearAll = () => {
+        setAllyPicks([]);
+        setEnemyPicks([]);
+        updateURLParams(bracket, [], [], heroPickRateThreshold, positionPickRateThreshold);
+    };
+
     // Get bracket group for synergy/counter lookups
     const bracketGroup = useMemo(() => getBracketGroup(bracket), [bracket]);
 
@@ -428,6 +434,16 @@ const StratzAnalysis = () => {
             }));
         };
 
+        const handleHeroClick = (heroName) => {
+            const currentPicks = isAlly ? allyPicks : enemyPicks;
+            const handler = isAlly ? handleAllyPicksChange : handleEnemyPicksChange;
+
+            // Remove any existing pick at this position, then add the new one
+            const newPicks = currentPicks.filter(p => p.position !== position);
+            newPicks.push({ heroName, position });
+            handler(newPicks);
+        };
+
         const renderHeroItem = (rec, isGreyedOut = false) => {
             let imageSrc;
             try {
@@ -442,6 +458,7 @@ const StratzAnalysis = () => {
                     key={rec.heroName}
                     className={`recommendation-item ${isGreyedOut ? 'below-threshold' : ''}`}
                     draggable
+                    onClick={() => handleHeroClick(rec.heroName)}
                     onDragStart={(e) => {
                         const dragData = {
                             heroName: rec.heroName,
@@ -558,6 +575,12 @@ const StratzAnalysis = () => {
                         selectedBracket={bracket}
                         onBracketChange={handleBracketChange}
                     />
+                    <button
+                        className="clear-all-button"
+                        onClick={handleClearAll}
+                    >
+                        Clear All
+                    </button>
                 </div>
                 <div className="header-right">
                     <PickRateFilter

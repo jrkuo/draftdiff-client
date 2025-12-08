@@ -63,6 +63,26 @@
     margin: 0;
 }
 
+.clear-all-button {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #546e7a;
+    color: #eceff1;
+    border: none;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.clear-all-button:hover {
+    background-color: #607d8b;
+}
+
+.clear-all-button:active {
+    background-color: #455a64;
+}
+
 /* Content Layout */
 .analysis-content {
     display: flex;
